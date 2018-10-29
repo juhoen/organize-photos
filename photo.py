@@ -19,8 +19,11 @@ class Photo(object):
 
     @classmethod
     def is_photo(obj, filepath):
-        filetype = imghdr.what(filepath)
-        return type(filetype) == str
+        try:
+            filetype = imghdr.what(filepath)
+            return type(filetype) == str
+        except FileNotFoundError:
+            return False
 
     def get_exif(self):
         img = open(self.filepath, 'rb')
@@ -43,9 +46,11 @@ class Photo(object):
         timestamp = datetime.fromtimestamp(timestamp)
         return timestamp
 
-    def get_organized_path(self, folder_format='%Y-%m-%d'):
+    def get_organized_folder(self, folder_format='%Y-%m-%d'):
         folder_name = self.created.strftime(folder_format)
-        return os.path.join(folder_name, self.filename)
+        return folder_name
 
     def copy_to(self, target_path):
-        copyfile(self.filepath, target_path)
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
+        copyfile(self.filepath, os.path.join(target_path, self.filename))
